@@ -12,3 +12,21 @@ these labeled data to be able to offer a method gives a reliable
 accuracy by only using a limited amount of these data.
 
 ![alt text](https://cdn.analyticsvidhya.com/wp-content/uploads/2018/09/mts.jpg)
+
+What's PCA?
+
+This is an algorithm to find orthogonal transformation axes that diagonalize the covariance 
+matrix.
+Suppose there was a dataset X having N multivariate time series
+𝛴𝑖 = 𝑐𝑜𝑣(𝑥𝑖
+), 𝑥𝑖 ∈ 𝑅
+𝑛𝑖
+∗𝑚 where 𝑛𝑖
+is the length of MTS sample and m is the number of the 
+variables
+𝛴 =
+1
+𝑁
+∑𝛴𝑖
+𝑁
+𝑖=1
