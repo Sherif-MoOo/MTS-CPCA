@@ -18,4 +18,5 @@ What's PCA?
 This is an algorithm to find orthogonal transformation axes that diagonalize the covariance 
 matrix.
 Suppose there was a dataset X having N multivariate time series
-Σ_i=cov⁡(x_i)  , x_i∈R^(n_i * m)
+Σ_i=cov⁡(x_i)  , x_i ∈ R^(n_i * m) where  n_i is the length of MTS sample and m is the number of the variables
+Σ=1/N ∑▒Σ_i 
