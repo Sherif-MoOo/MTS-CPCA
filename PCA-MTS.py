@@ -50,10 +50,12 @@ class PCA_MTS():
                 globals()[shortname] = eval(modulename + "." + shortname) 
                 
         global_imports("numpy","np")
+        global_imports("pandas","pd")
         global_imports("tensorflow","tf")
         global_imports("tensorflow_probability","tfp")
         global_imports("seaborn","sns")
         global_imports("matplotlib","plt")
+        
 
         
         #mean of each sample per m features cross ni length
@@ -179,7 +181,37 @@ class PCA_MTS():
             plt.pyplot.tight_layout()
             for i in range(start,end,1):
                 print('Percentage of Explained Variance using covariance matrix if we used %s Components is:'%(i+1) +str(cum_Explained_Var[i])+'%'+'\n')
+ 
+    def correlation_most_effective_features_pc(self, Columns):
         
+        eig_vals , eig_vecs , Junk , Junk = self.eigens()
+        
+        Dim = np.abs(eig_vecs).shape[0]
+        most_important = [np.abs(eig_vecs[i]).argmax() for i in range(Dim)]
+
+        most_important_features = [Columns[most_important[i]] for i in range(Dim)]
+        dic = {'PC{}'.format(i):  most_important_features[i] for i in range(Dim)}
+
+        df = pd.DataFrame(dic.items())
+        df.columns = ['PC', 'features']
+        
+        return df
+
+    def covariance_most_effective_features_pc(self, Columns):
+        
+        Junk , Junk , eig_vals , eig_vecs = self.eigens()
+        
+        Dim = np.abs(eig_vecs).shape[0]
+        most_important = [np.abs(eig_vecs[i]).argmax() for i in range(Dim)]
+
+        most_important_features = [Columns[most_important[i]] for i in range(Dim)]
+        dic = {'PC{}'.format(i):  most_important_features[i] for i in range(Dim)}
+
+        df = pd.DataFrame(dic.items())
+        df.columns = ['PC', 'features']
+        
+        return df
+    
 
 
 # In[6]:
@@ -212,6 +244,18 @@ Obj.correlation_explained_var()
 
 
 Obj.covariance_explained_var()
+
+
+# In[11]:
+
+
+Obj.correlation_most_effective_features_pc(channels_order)
+
+
+# In[12]:
+
+
+Obj.covariance_most_effective_features_pc(channels_order)
 
 
 # In[ ]:
