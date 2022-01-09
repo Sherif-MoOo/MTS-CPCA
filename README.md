@@ -21,7 +21,7 @@ accuracy by only using a limited amount of these data.
 What's PCA?
 
 This is a linear unsupervised algorithm to find orthogonal transformation axes that diagonalize the covariance 
-matrix the goal is to eliminate low variance and high correlated features.
+matrix the goal is to eliminate low variance and highly correlated features.
 
 Why PCA?
 
