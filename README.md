@@ -7,6 +7,7 @@ Time series data can be seen everywhere including stock exchange, financial mark
 which is one kind of the important data needed to be mined for the valuable information and knowledge. It has two
 categories according to various number of the variables, they are univariate time series (UTS) and multivariate time
 series(MTS).
+
 MTS (Multivariate time series) is an important type of data that
 is indispensable in a variety of domains as  medicine 
 domain which is the evolution of a group of synchronous
@@ -19,8 +20,8 @@ accuracy by only using a limited amount of these data.
 
 What's PCA?
 
-This is an algorithm to find orthogonal transformation axes that diagonalize the covariance 
-matrix.
+This is a linear unsupervised algorithm to find orthogonal transformation axes that diagonalize the covariance 
+matrix the goal is to eliminate low variance and high correlated features.
 
 Why PCA?
 
