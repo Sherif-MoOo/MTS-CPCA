@@ -4,12 +4,6 @@
 # In[1]:
 
 
-'''import numpy  as np
-import pandas as pd
-import h5py
-import tensorflow as tf
-import matplotlib.pyplot as plt
-from sklearn import preprocessing'''
 import h5py
 
 
@@ -30,57 +24,10 @@ X.shape
 # In[4]:
 
 
-'''No_Activity_Events = np.where(y==0)[0]
-len(No_Activity_Events)'''
-
-
-# In[5]:
-
-
-'''No_Activity_Events = np.where(y==0)[0]
-len(No_Activity_Events)
-Events = pd.Series(y).to_frame().rename(columns={0: "Events"})['Events'].astype(str)
-type_counts = Events.value_counts()
-Coutns = type_counts.sum(axis = 0)
-for i in range(len(type_counts)):
-    type_counts.iloc[i] = int((type_counts.iloc[i]/Coutns)*100)
-ax =type_counts.plot(kind='bar' , figsize =(10,10)  , fontsize = 12);
-plt.suptitle('Data_Balance', fontsize=18);
-plt.ylabel('Percentage', fontsize=18);
-plt.xlabel('Events', fontsize=18);'''
-
-
-# In[6]:
-
-
 channels_order = ['AF3', 'F7', 'F3', 'FC5', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'FC6', 'F4', 'F8', 'AF4']
 
 
-# In[7]:
-
-
-'''list_=[]
-for i in range (0, len(No_Activity_Events), 2):
-    list_ = list_ + [No_Activity_Events[i]]
-y = np.delete(y, list_, 0)
-X = np.delete(X, list_, 0)
-No_Activity_Events = np.where(y==0)[0]
-list_=[]
-for i in range (0, len(No_Activity_Events), 2):
-    list_ = list_ + [No_Activity_Events[i]]
-y = np.delete(y, list_, 0)
-X = np.delete(X, list_, 0)
-No_Activity_Events = np.where(y==0)[0]
-len(No_Activity_Events)'''
-
-
-# In[8]:
-
-
-#Input tensor X as shape of M: Samples , ni: length of time sereis , m: Numper of features 
-
-
-# In[9]:
+# In[5]:
 
 
 class PCA_MTS():
@@ -122,7 +69,8 @@ class PCA_MTS():
 
         
 
-    def Stats_COV(self):
+    def stats_COV(self):
+        '''Calculating covariance matrix'''
         
         State_x = PCA_MTS.X_normalized
 
@@ -130,9 +78,10 @@ class PCA_MTS():
     
         Segma_COV          = tf.divide(tf.reduce_sum(DeNormalized_Segma, PCA_MTS.Index_Samples), X.shape[PCA_MTS.Index_Samples])
     
-        return Segma_COV 
+        return Segma_COV.numpy() 
     
-    def Correlation(self , Columns , figs = (10,10) ,titles = 20):
+    def normalized_COV(self):
+        '''Calculating correlationg matrix out from covariance matrix'''
         
         store = PCA_MTS.X_normalized
         
@@ -147,11 +96,22 @@ class PCA_MTS():
                                                                                       X.shape[PCA_MTS.Index_features])
         std_x   =  tf.divide(std_x,std)
     
-        fig, ax = plt.pyplot.subplots(figsize= figs)
         
         PCA_MTS.X_normalized = std_x
+        
+        correlation = self.stats_COV()
     
-        sns.heatmap(tf.math.abs(self.Stats_COV()),
+        
+        PCA_MTS.X_normalized = store
+    
+        return correlation
+    
+    def correlation(self, Columns , figs = (10,10) ,titles = 20):
+        
+        correlation = self.normalized_COV()
+        
+        fig, ax = plt.pyplot.subplots(figsize= figs)
+        sns.heatmap(tf.math.abs(correlation),
                      cbar=True,
                      annot=True,
                      square=True,
@@ -165,35 +125,93 @@ class PCA_MTS():
         plt.pyplot.tight_layout()
         plt.pyplot.show()
         
-        PCA_MTS.X_normalized = store
     
-        return None
+    def eigens(self):
+        '''PCA involves projecting the data onto the eigenvectors of the covariance matrix.
+        If you don't standardize your data first, these eigenvectors will be all different lengths.
+        Then the eigenspace of the covariance matrix will be stretched, leading to similarly "stretched" projections.
+        However, there are situations in which you do want to preserve the original variances.
+        So I'll save both eigens'''
+        
+        Corr_eig_vals, Corr_eig_vecs = np.linalg.eig(self.normalized_COV())
+        COV_eig_vals, COV_eig_vecs   = np.linalg.eig(self.stats_COV())
+        
+        return (Corr_eig_vals, Corr_eig_vecs, COV_eig_vals, COV_eig_vecs)
+    
+    def correlation_explained_var(self,start = 6 , end = 12 , figs = (10,10)):
+        '''Percentage of Explained Variance using correlation matrix'''
+        eig_vals , eig_vecs , Junk , Junk = self.eigens()
+        
+        start = start-1
+        Explained_Var = [(i / sum(eig_vals))*100 for i in sorted(eig_vals, reverse=True)]
+        cum_Explained_Var = np.cumsum(Explained_Var)
+        with plt.pyplot.style.context('seaborn-whitegrid'):
+            plt.pyplot.figure(figsize=figs)
+
+            plt.pyplot.bar(range(X.shape[self.Index_features]), Explained_Var, alpha=0.5, align='center',
+                    label='individual explained variance')
+            plt.pyplot.step(range(X.shape[self.Index_features]), cum_Explained_Var, where='mid',
+                     label='cumulative explained variance')
+            plt.pyplot.ylabel('Explained variance ratio')
+            plt.pyplot.xlabel('Principal components')
+            plt.pyplot.legend(loc='best')
+            plt.pyplot.tight_layout()
+            for i in range(start,end,1):
+                print('Percentage of Explained Variance using correlation matrix if we used %s Components is:'%(i+1) +str(cum_Explained_Var[i])+'%'+'\n')
+
+    def covariance_explained_var(self,start = 6 , end = 12 , figs = (10,10)):
+        '''Percentage of Explained Variance using covariance matrix'''
+        Junk , Junk , eig_vals , eig_vecs = self.eigens()
+        
+        start = start-1
+        Explained_Var = [(i / sum(eig_vals))*100 for i in sorted(eig_vals, reverse=True)]
+        cum_Explained_Var = np.cumsum(Explained_Var)
+        with plt.pyplot.style.context('seaborn-whitegrid'):
+            plt.pyplot.figure(figsize=figs)
+
+            plt.pyplot.bar(range(X.shape[self.Index_features]), Explained_Var, alpha=0.5, align='center',
+                    label='individual explained variance')
+            plt.pyplot.step(range(X.shape[self.Index_features]), cum_Explained_Var, where='mid',
+                     label='cumulative explained variance')
+            plt.pyplot.ylabel('Explained variance ratio')
+            plt.pyplot.xlabel('Principal components')
+            plt.pyplot.legend(loc='best')
+            plt.pyplot.tight_layout()
+            for i in range(start,end,1):
+                print('Percentage of Explained Variance using covariance matrix if we used %s Components is:'%(i+1) +str(cum_Explained_Var[i])+'%'+'\n')
+        
+
+
+# In[6]:
+
+
+Obj = PCA_MTS(X)
+
+
+# ![image.png](attachment:image.png)
+
+# In[7]:
+
+
+Obj.stats_COV()
+
+
+# In[8]:
+
+
+Obj.correlation(channels_order)
+
+
+# In[9]:
+
+
+Obj.correlation_explained_var()
 
 
 # In[10]:
 
 
-a = PCA_MTS(X)
-
-
-# ![image.png](attachment:image.png)
-
-# In[11]:
-
-
-a.Stats_COV()
-
-
-# In[12]:
-
-
-a.Correlation(channels_order)
-
-
-# In[ ]:
-
-
-
+Obj.covariance_explained_var()
 
 
 # In[ ]:
