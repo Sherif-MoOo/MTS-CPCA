@@ -36,10 +36,10 @@ class PCA_MTS():
     Index_features            = 2
     X_normalized = 0
     
-    def __init__(self,X):
+    def __init__(self,X_tensor):
         
         print("Pls make sure that Input tensor X as shape of M: Samples , ni: length of time sereis , m: Numper of features ")        
-        self.X = X
+        self.X_tensor = X_tensor
         
         def global_imports(modulename,shortname = None, asfunction = False):
             if shortname is None: 
@@ -59,15 +59,15 @@ class PCA_MTS():
 
         
         #mean of each sample per m features cross ni length
-        mean_vector_i = tf.divide(tf.reduce_sum(X, self.Index_length_time_sereis), X.shape[self.Index_length_time_sereis])
+        mean_vector_i = tf.divide(tf.reduce_sum(X_tensor, self.Index_length_time_sereis), X_tensor.shape[self.Index_length_time_sereis])
         #This result in tensor of shape (M , m)
 
         #Now broad-castting the tensor intp (M, ni ,m)
-        mean_vector_i = np.tile(mean_vector_i, (1,X.shape[self.Index_length_time_sereis])).reshape(X.shape[self.Index_Samples],
-                                                                                      X.shape[self.Index_length_time_sereis],
-                                                                                      X.shape[self.Index_features])
+        mean_vector_i = np.tile(mean_vector_i, (1,X_tensor.shape[self.Index_length_time_sereis])).reshape(X_tensor.shape[self.Index_Samples],
+                                                                                      X_tensor.shape[self.Index_length_time_sereis],
+                                                                                      X_tensor.shape[self.Index_features])
 
-        PCA_MTS.X_normalized  = tf.subtract(X,mean_vector_i).numpy() #Getting the normalized tensor
+        PCA_MTS.X_normalized  = tf.subtract(X_tensor,mean_vector_i).numpy() #Getting the normalized tensor
 
         
 
@@ -78,7 +78,7 @@ class PCA_MTS():
 
         DeNormalized_Segma = tfp.stats.covariance(State_x, sample_axis=1, event_axis=2, keepdims=False, name=None)
     
-        Segma_COV          = tf.divide(tf.reduce_sum(DeNormalized_Segma, PCA_MTS.Index_Samples), X.shape[PCA_MTS.Index_Samples])
+        Segma_COV          = tf.divide(tf.reduce_sum(DeNormalized_Segma, PCA_MTS.Index_Samples), self.X_tensor.shape[PCA_MTS.Index_Samples])
     
         return Segma_COV.numpy() 
     
@@ -93,9 +93,9 @@ class PCA_MTS():
         std     = tf.math.reduce_std(
             std_x, axis=1, keepdims=False, name=None)
     
-        std     = np.tile(std, (1,X.shape[PCA_MTS.Index_length_time_sereis])).reshape(X.shape[PCA_MTS.Index_Samples],
-                                                                                      X.shape[PCA_MTS.Index_length_time_sereis],
-                                                                                      X.shape[PCA_MTS.Index_features])
+        std     = np.tile(std, (1,self.X_tensor.shape[PCA_MTS.Index_length_time_sereis])).reshape(self.X_tensor.shape[PCA_MTS.Index_Samples],
+                                                                                      self.X_tensor.shape[PCA_MTS.Index_length_time_sereis],
+                                                                                      self.X_tensor.shape[PCA_MTS.Index_features])
         std_x   =  tf.divide(std_x,std)
     
         
